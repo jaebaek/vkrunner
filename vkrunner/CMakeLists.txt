@@ -41,6 +41,7 @@ set(VKRUNNER_SOURCE_FILES
         vr-result.c
         vr-script.c
         vr-script.h
+        vr-script-resource.h
         vr-temp-file.c
         vr-temp-file.h
         vr-util.c
