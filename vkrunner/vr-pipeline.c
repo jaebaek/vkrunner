@@ -955,6 +955,13 @@ vr_pipeline_free(struct vr_pipeline *pipeline)
                 vr_free(pipeline->desc_sets);
         }
 
+        if (window->context->descriptor_pool) {
+                vkfn->vkDestroyDescriptorPool(window->device,
+                                              window->context->descriptor_pool,
+                                              NULL /* allocator */);
+                window->context->descriptor_pool = VK_NULL_HANDLE;
+        }
+
         for (int i = 0; i < VR_SCRIPT_N_STAGES; i++) {
                 if (pipeline->modules[i] == VK_NULL_HANDLE)
                         continue;

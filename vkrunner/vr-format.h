@@ -86,4 +86,11 @@ vr_format_load_pixel(const struct vr_format *format,
                      const uint8_t *p,
                      double *pixel);
 
+bool
+vr_format_parse_datum(const struct vr_config *config,
+                      enum vr_format_mode mode,
+                      int bit_size,
+                      const char **text,
+                      void *data);
+
 #endif /* VR_FORMAT_H */

@@ -25,11 +25,14 @@
 
 #include "config.h"
 
+#include "vr-error-message.h"
 #include "vr-format.h"
+#include "vr-hex.h"
 #include "vr-util.h"
 
-#include <string.h>
 #include <assert.h>
+#include <errno.h>
+#include <string.h>
 
 #include "vr-format-table.h"
 
@@ -286,4 +289,174 @@ vr_format_load_pixel(const struct vr_format *format,
                         break;
                 }
         }
+}
+
+/**
+ * Parse a single number (floating point or integral) from one of the
+ * data rows, and store it in the location pointed to by \c data.
+ * Update \c text to point to the next character of input.
+ *
+ * If there is a parse failure, print a description of the problem and
+ * then return false.  Otherwise return true.
+ */
+bool
+vr_format_parse_datum(const struct vr_config *config,
+                      enum vr_format_mode mode,
+                      int bit_size,
+                      const char **text,
+                      void *data)
+{
+        char *endptr;
+        errno = 0;
+        switch (mode) {
+        case VR_FORMAT_MODE_SFLOAT:
+                switch (bit_size) {
+                case 16: {
+                        unsigned short value = vr_hex_strtohf(*text, &endptr);
+                        if (errno == ERANGE) {
+                                vr_error_message(config,
+                                                 "Could not parse as "
+                                                 "half float");
+                                return false;
+                        }
+                        *((uint16_t *) data) = value;
+                        goto handled;
+                }
+                case 32: {
+                        float value = vr_hex_strtof(*text, &endptr);
+                        if (errno == ERANGE) {
+                                vr_error_message(config,
+                                                 "Could not parse as float");
+                                return false;
+                        }
+                        *((float *) data) = value;
+                        goto handled;
+                }
+                case 64: {
+                        double value = vr_hex_strtod(*text, &endptr);
+                        if (errno == ERANGE) {
+                                vr_error_message(config,
+                                                 "Could not parse as double");
+                                return false;
+                        }
+                        *((double *) data) = value;
+                        goto handled;
+                }
+                }
+                break;
+        case VR_FORMAT_MODE_UNORM:
+        case VR_FORMAT_MODE_USCALED:
+        case VR_FORMAT_MODE_UINT:
+        case VR_FORMAT_MODE_SRGB:
+                switch (bit_size) {
+                case 8: {
+                        unsigned long value = strtoul(*text, &endptr, 0);
+                        if (errno == ERANGE || value > UINT8_MAX) {
+                                vr_error_message(config,
+                                                 "Could not parse as unsigned "
+                                                 "byte");
+                                return false;
+                        }
+                        *((uint8_t *) data) = (uint8_t) value;
+                        goto handled;
+                }
+                case 16: {
+                        unsigned long value = strtoul(*text, &endptr, 0);
+                        if (errno == ERANGE || value > UINT16_MAX) {
+                                vr_error_message(config,
+                                                 "Could not parse as unsigned "
+                                                 "short");
+                                return false;
+                        }
+                        *((uint16_t *) data) = (uint16_t) value;
+                        goto handled;
+                }
+                case 32: {
+                        unsigned long value = strtoul(*text, &endptr, 0);
+                        if (errno == ERANGE || value > UINT32_MAX) {
+                                vr_error_message(config,
+                                                 "Could not parse as "
+                                                 "unsigned integer");
+                                return false;
+                        }
+                        *((uint32_t *) data) = (uint32_t) value;
+                        goto handled;
+                }
+                case 64: {
+                        unsigned long value = strtoul(*text, &endptr, 0);
+                        if (errno == ERANGE || value > UINT64_MAX) {
+                                vr_error_message(config,
+                                                 "Could not parse as "
+                                                 "unsigned long");
+                                return false;
+                        }
+                        *((uint64_t *) data) = (uint64_t) value;
+                        goto handled;
+                }
+                }
+                break;
+        case VR_FORMAT_MODE_SNORM:
+        case VR_FORMAT_MODE_SSCALED:
+        case VR_FORMAT_MODE_SINT:
+                switch (bit_size) {
+                case 8: {
+                        long value = strtol(*text, &endptr, 0);
+                        if (errno == ERANGE ||
+                            value > INT8_MAX || value < INT8_MIN) {
+                                vr_error_message(config,
+                                                 "Could not parse as signed "
+                                                 "byte");
+                                return false;
+                        }
+                        *((int8_t *) data) = (int8_t) value;
+                        goto handled;
+                }
+                case 16: {
+                        long value = strtol(*text, &endptr, 0);
+                        if (errno == ERANGE ||
+                            value > INT16_MAX || value < INT16_MIN) {
+                                vr_error_message(config,
+                                                 "Could not parse as signed "
+                                                 "short");
+                                return false;
+                        }
+                        *((int16_t *) data) = (int16_t) value;
+                        goto handled;
+                }
+                case 32: {
+                        long value = strtol(*text, &endptr, 0);
+                        if (errno == ERANGE ||
+                            value > INT32_MAX || value < INT32_MIN) {
+                                vr_error_message(config,
+                                                 "Could not parse as "
+                                                 "signed integer");
+                                return false;
+                        }
+                        *((int32_t *) data) = (int32_t) value;
+                        goto handled;
+                }
+                case 64: {
+                        long value = strtol(*text, &endptr, 0);
+                        if (errno == ERANGE ||
+                            value > INT64_MAX || value < INT64_MIN) {
+                                vr_error_message(config,
+                                                 "Could not parse as "
+                                                 "signed long");
+                                return false;
+                        }
+                        *((int64_t *) data) = (int64_t) value;
+                        goto handled;
+                }
+                }
+                break;
+        case VR_FORMAT_MODE_UFLOAT:
+                break;
+        }
+
+        vr_fatal("Unexpected format");
+
+handled:
+        *text = endptr;
+
+        return true;
 }
