@@ -42,11 +42,12 @@ vr_config_add_script_file(struct vr_config *config,
 
 void
 vr_config_add_script_string(struct vr_config *config,
+                            const char *tag,
                             const char *string)
 {
         struct vr_config_script *script;
         script = vr_alloc(sizeof *script);
-        script->filename = NULL;
+        script->filename = vr_strdup(tag);
         script->string = vr_strdup(string);
         vr_list_insert(config->scripts.prev, &script->link);
 }

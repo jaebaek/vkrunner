@@ -2526,13 +2526,14 @@ vr_script_load_from_file(const struct vr_config *config,
 
 struct vr_script *
 vr_script_load_from_string(const struct vr_config *config,
-                           const char *string)
+                           const char *string,
+                           const char *tag)
 {
         struct vr_script *script;
         struct load_state data = { NULL };
         bool res;
 
-        load_script_begin(&data, config, "(string script)");
+        load_script_begin(&data, config, tag ? tag : "(string script)");
         res = load_script_from_string(&data, string);
         script = load_script_end(&data, res);
 

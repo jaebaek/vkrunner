@@ -227,7 +227,7 @@ process_script(struct vr_executor *executor,
         struct vr_pipeline *pipeline = NULL;
 
         if (string)
-                script = vr_script_load_from_string(config, string);
+                script = vr_script_load_from_string(config, string, filename);
         else
                 script = vr_script_load_from_file(config, filename);
 

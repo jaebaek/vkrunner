@@ -57,6 +57,7 @@ vr_config_add_script_file(struct vr_config *config,
 
 void
 vr_config_add_script_string(struct vr_config *config,
+                            const char *tag,
                             const char *string);
 
 void

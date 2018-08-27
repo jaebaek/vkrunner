@@ -204,7 +204,8 @@ vr_script_load_from_file(const struct vr_config *config,
 
 struct vr_script *
 vr_script_load_from_string(const struct vr_config *config,
-                           const char *string);
+                           const char *string,
+                           const char *tag);
 
 void
 vr_script_free(struct vr_script *script);
