@@ -94,6 +94,14 @@ opt_token_replacement(struct vr_config *config,
         return true;
 }
 
+static bool
+opt_dump(struct vr_config *config, const char *arg)
+{
+        vr_config_set_dump_resources(config, true);
+        return true;
+}
+
+
 static const struct option
 options[] = {
         { 'h', "Show this help message", NULL, opt_help },
@@ -102,6 +110,7 @@ options[] = {
         { 'd', "Show the SPIR-V disassembly", NULL, opt_disassembly },
         { 'D', "Replace occurences of TOK with REPL in the scripts",
           "TOK=REPL", opt_token_replacement },
+        { 's', "Dump all buffer and image resources", NULL, opt_dump },
 };
 
 #define N_OPTIONS (sizeof options / sizeof options[0])
@@ -122,7 +131,6 @@ opt_help(struct vr_config *config,
                        options[i].argument_name :
                        "",
                        options[i].description);
-
         }
 
         return false;

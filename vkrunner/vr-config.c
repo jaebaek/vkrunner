@@ -89,6 +89,12 @@ vr_config_set_show_disassembly(struct vr_config *config,
 }
 
 void
+vr_config_set_dump_resources(struct vr_config *config, bool dump)
+{
+        config->dump_resources = dump;
+}
+
+void
 vr_config_set_user_data(struct vr_config *config,
                         void *user_data)
 {

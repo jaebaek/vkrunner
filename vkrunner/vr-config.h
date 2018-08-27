@@ -78,6 +78,9 @@ void
 vr_config_set_show_disassembly(struct vr_config *config,
                                bool show_disassembly);
 
+void
+vr_config_set_dump_resources(struct vr_config *config, bool dump);
+
 /* Sets a pointer to be passed back to the caller in all of the
  * callback fuctions below.
  */

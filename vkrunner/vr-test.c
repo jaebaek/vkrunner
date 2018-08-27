@@ -1295,6 +1295,97 @@ allocate_resources(struct test_data *data)
 }
 
 static bool
+dump_resources(struct test_data *data)
+{
+        struct vr_buffer buf = VR_BUFFER_STATIC_INIT;
+        const char *resource_name = NULL;
+        const char *p;
+
+        vr_buffer_append_printf(&buf,
+                                "Dump %lu resources ...\n\n",
+                                data->script->n_resources);
+
+        for (unsigned i = 0; i < data->script->n_resources; i++) {
+                const struct vr_script_resource *script_resource =
+                        data->script->resources + i;
+
+                switch (script_resource->type) {
+                // Images.
+                case VR_SCRIPT_RESOURCE_TYPE_COMBINED_IMAGE:
+                        resource_name = "combined image";
+                case VR_SCRIPT_RESOURCE_TYPE_SAMPLED_IMAGE:
+                        resource_name = "sampled image";
+                case VR_SCRIPT_RESOURCE_TYPE_STORAGE_IMAGE:
+                        resource_name = "storage image";
+
+                        p = data->resources[i]->memory_map;
+                        size_t width = script_resource->image.width;
+                        size_t height = script_resource->image.height;
+                        vr_buffer_append_printf(&buf,
+                                                "%u. %u:%u %s\n",
+                                                i,
+                                                script_resource->desc_set,
+                                                script_resource->binding,
+                                                resource_name);
+                        for (size_t y = 0; y < height; ++y) {
+                                for (size_t x = 0; x < width; ++x) {
+                                        for (size_t j = 0; j < 4; ++j) {
+                                                vr_buffer_append_printf(
+                                                        &buf,
+                                                        "%02x",
+                                                        p[j] & 0xff);
+                                        }
+                                        p += 4;
+                                }
+                                vr_buffer_append_printf(&buf, "\n");
+                        }
+                        break;
+
+                // Buffers.
+                case VR_SCRIPT_RESOURCE_TYPE_UNIFORM_TEXEL:
+                        resource_name = "uniform texel";
+                case VR_SCRIPT_RESOURCE_TYPE_STORAGE_TEXEL:
+                        resource_name = "storage texel";
+                case VR_SCRIPT_RESOURCE_TYPE_UNIFORM_BUFFER:
+                        resource_name = "uniform buffer";
+                case VR_SCRIPT_RESOURCE_TYPE_STORAGE_BUFFER:
+                        resource_name = "storage buffer";
+
+                        p = data->resources[i]->memory_map;
+                        size_t size = script_resource->buffer.size;
+                        vr_buffer_append_printf(&buf,
+                                                "%u. %u:%u %s %lu\n",
+                                                i,
+                                                script_resource->desc_set,
+                                                script_resource->binding,
+                                                resource_name,
+                                                size);
+                        for (size_t j = 0; j < size; ++j)
+                                vr_buffer_append_printf(&buf,
+                                                        "%02x",
+                                                        p[j] & 0xff);
+                        vr_buffer_append_printf(&buf, "\n");
+                        break;
+                default:
+                        vr_buffer_append_printf(&buf,
+                                                "%u. %u:%u not buffer nor "
+                                                "image ... skip\n\n",
+                                                i,
+                                                script_resource->desc_set,
+                                                script_resource->binding);
+                        break;
+                }
+                vr_buffer_append_printf(&buf, "\n");
+        }
+
+        vr_error_message(data->window->config, "%s", (const char *) buf.data);
+
+        vr_buffer_destroy(&buf);
+
+        return true;
+}
+
+static bool
 set_buffer_subdata(struct test_data *data,
                    const struct vr_script_command *command)
 {
@@ -1525,6 +1616,9 @@ vr_test_run(struct vr_window *window,
                 if (!set_state(&data, TEST_STATE_IDLE))
                         ret = false;
         }
+
+        if (window->config->dump_resources)
+                dump_resources(&data);
 
         struct test_resource *resource, *tmp;
         vr_list_for_each_safe(resource, tmp, &data.all_resources, link) {

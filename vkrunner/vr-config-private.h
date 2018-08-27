@@ -46,6 +46,7 @@ struct vr_config {
         struct vr_list scripts;
         struct vr_list token_replacements;
         bool show_disassembly;
+        bool dump_resources;
 
         vr_config_error_cb error_cb;
         vr_config_before_test_cb before_test_cb;
